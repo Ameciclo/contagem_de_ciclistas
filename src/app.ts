@@ -3,15 +3,9 @@ import mongoose from "mongoose";
 import cors from "cors";
 import routes from "./routes";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import * as dotenv from "dotenv";
 
 dotenv.config();
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-});
 
 const {
   MONGO_USERNAME,
@@ -36,7 +30,6 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use(limiter);
 app.use(helmet());
 app.disable("x-powered-by");
 app.use("/contagens/v1", routes);
