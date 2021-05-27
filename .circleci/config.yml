@@ -6,120 +6,24 @@ executors:
     docker:
       - image: circleci/buildpack-deps:stretch
 orbs:
-  node: circleci/node@4.2.1
-workflows:
-  build-latest:
-    jobs:
-      - checkout
-      - build
-      - docker-build:
-          requires:
-            - build
-          filters:
-            branches:
-              only: main
-      - publish-latest:
-          requires:
-            - docker-build
-          filters:
-            branches:
-              only: main
-
-  build-tags:
-    jobs:
-      - docker-build:
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - publish-tag:
-          requires:
-            - docker-build
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-
+  node: circleci/node@4.4.0
 
 jobs:
-  checkout:
-    working_directory: ~/contagem_de_ciclistas
+  build-and-test:  
     docker:
-      - image: node:15.14.0
-    steps:
-      - checkout
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-      - node/install-packages:
-          pkg-manager: npm
-      - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - node_modules
-      - persist_to_workspace:
-          root: ~/contagem_de_ciclistas
-          paths: 
-            - .
+      - image: cimg/node:lts
 
-  build:
-    working_directory: ~/contagem_de_ciclistas
-    docker:
-      - image: node:15.14.0
+    working_directory: ~/ameciclo/contagem_de_ciclistas
+
     steps:
-      - attach_workspace:
-          at: ~/contagem_de_ciclistas
+      - checkout:
+          path: ~/ameciclo/contagem_de_ciclistas
+      - node/install-packages
       - run:
           name: Run build
-          command: 'npm run build'
+          command: npm run build
 
-  docker-build:
-    working_directory: ~/contagem_de_ciclistas
-    executor: docker-publisher
-    steps:
-      - setup_remote_docker
-      - attach_workspace:
-          at: ~/contagem_de_ciclistas
-      - run:
-          name: Build Docker image
-          command: |
-            docker build -t $IMAGE_NAME:latest .
-      - run:
-          name: Archive Docker image
-          command: docker save -o image.tar $IMAGE_NAME
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./image.tar
-  publish-latest:
-    executor: docker-publisher
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - setup_remote_docker
-      - run:
-          name: Load archived Docker image
-          command: docker load -i /tmp/workspace/image.tar
-      - run:
-          name: Publish Docker Image to Docker Hub
-          command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            docker push $IMAGE_NAME:latest
-  publish-tag:
-    executor: docker-publisher
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - setup_remote_docker
-      - run:
-          name: Load archived Docker image
-          command: docker load -i /tmp/workspace/image.tar
-      - run:
-          name: Publish Docker Image to Docker Hub
-          command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-            IMAGE_TAG=${CIRCLE_TAG/v/''}
-            docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
-            docker push $IMAGE_NAME:latest
-            docker push $IMAGE_NAME:$IMAGE_TAG
+workflows:
+  build-latest: 
+    jobs:
+      - build-and-test
