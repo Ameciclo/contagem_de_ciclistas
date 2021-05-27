@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="2" failures="0" errors="0" time="1.314">
+  <testsuite name="GET /v1/cyclist-count" errors="0" failures="0" skipped="0" timestamp="2021-05-27T18:38:59" time="1.281" tests="2">
+    <testcase classname="GET /v1/cyclist-count should GET /v1/cyclist-count route and return 200" name="GET /v1/cyclist-count should GET /v1/cyclist-count route and return 200" time="0.232">
+    </testcase>
+    <testcase classname="GET /v1/cyclist-count should GET /v1/cyclist-count/:id and return 200" name="GET /v1/cyclist-count should GET /v1/cyclist-count/:id and return 200" time="0.064">
+    </testcase>
+  </testsuite>
+</testsuites>

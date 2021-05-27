@@ -1,17 +1,17 @@
-FROM node:lts AS builder
+FROM node:lts-alpine AS base
+WORKDIR /contagem
+
+FROM base AS builder
 WORKDIR /usr/src/contagem
 COPY package*.json ./
 RUN npm ci
 COPY tsconfig*.json ./
 COPY src src
 RUN npm run build
+RUN npm prune --production
 
-FROM node:lts
+FROM base AS release
 ENV NODE_ENV=production
-WORKDIR /contagem
-COPY package*.json ./
-RUN npm install
-RUN npm install pm2 -g
-COPY --from=builder /usr/src/contagem/dist/ dist/
-EXPOSE 4000
-CMD ["pm2-runtime","dist/server.js"]
+COPY --from=builder /usr/src/contagem/node_modules ./node_modules
+COPY --from=builder /usr/src/contagem/dist ./dist
+CMD ["node","dist/server.js"]

@@ -1,17 +1,8 @@
 import { Router } from "express";
-import * as cyclistCountController from "./controllers/CyclistCountController";
+import CyclistCountController from "./controllers/CyclistCountController";
 
-const router = Router();
+const router: Router = Router();
 
-router
-  .route("/cyclist-count")
-  .get(cyclistCountController.getCyclistCount)
-  .post(cyclistCountController.postCyclistCount);
-
-router
-  .route("/cyclist-count/:id")
-  .get(cyclistCountController.getCyclistCountById);
-
-router.route("/").get(cyclistCountController.getCyclistCountMetadata);
+router.use("/cyclist-count", CyclistCountController);
 
 export default router;

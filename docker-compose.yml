@@ -1,53 +1,46 @@
 version: "3.8"
 
-networks:
-  web:
-    external: true
-  internal:
-    external: false
-
 volumes:
   contagem_mongo_data:
 
+networks:
+  internal:
+    external: false
+
 services:
   contagem:
-    container_name: "contagem_de_ciclistas_api"
+    container_name: "contagem_api"
     restart: always
+    image: ameciclo/contagem
     build: .
-    image: ameciclo/contagem_de_ciclistas
+    command: ["npm", "run", "dev"]
+    volumes:
+      - .:/contagem
     environment:
-      PORT: 4000
-      MONGO_DB: contagem
-      MONGO_HOSTNAME: mongodb
-      MONGO_PORT: 27017
-      MONGO_USERNAME: ameciclo
-      MONGO_PASSWORD: ameciclo
-      NODE_ENV: "${ENV}"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.contagem.rule=Host(`api.plataforma.ameciclo.org`) && PathPrefix(`/contagens/v1/`)"
-      - "traefik.http.routers.contagem.tls.certresolver=le"
-      - "traefik.http.middlewares.redirectscheme.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirectscheme.redirectscheme.permanent=true"
-      - "traefik.docker.network=web"
-    networks:
-      - internal
-      - web
+      APP_PORT: 4000
+      APP_HOST: 0.0.0.0
+      DB_NAME: dev
+      DB_HOST: mongo
+      DB_PORT: 27017
+      DB_USERNAME: test
+      DB_PASSWORD: test
+      NODE_ENV: development
     ports:
       - "4000:4000"
-    links:
-      - mongodb
-  mongodb:
-    container_name: "contagem_de_ciclistas_mongodb"
-    image: mongo
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ameciclo
-      MONGO_INITDB_ROOT_PASSWORD: ameciclo
-    ports:
-      - "27017:27017"
     networks:
       - internal
-    labels:
-      - traefik.enable=false
+    links:
+      - mongo
+  mongo:
+    container_name: "contagem_db"
+    image: mongo
+    restart: always
+    networks:
+      - internal
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: test
+      MONGO_INITDB_ROOT_PASSWORD: test
     volumes:
       - contagem_mongo_data:/data/db

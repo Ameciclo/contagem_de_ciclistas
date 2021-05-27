@@ -1,39 +1,74 @@
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
 import routes from "./routes";
 import helmet from "helmet";
-import * as dotenv from "dotenv";
+import morgan from "morgan";
+import { Logger, ILogger } from "./utils";
+import nodeErrorHandler from "./middlewares/nodeErrorHandler";
+import config from "./config/config";
+import notFoundError from "./middlewares/notFoundHandler";
+import mongoose from "mongoose";
+import genericErrorHandler from "./middlewares/genericErrorHandler";
 
-dotenv.config();
+export class Application {
+  app: express.Application;
+  logger: ILogger;
+  config = config;
 
-const {
-  MONGO_USERNAME,
-  MONGO_PASSWORD,
-  MONGO_HOSTNAME,
-  MONGO_PORT,
-  MONGO_DB,
-} = process.env;
+  constructor() {
+    this.logger = new Logger(__filename);
+    this.app = express();
+    this.app.locals.name = this.config.name;
+    this.app.locals.version = this.config.version;
+    this.app.use(cors());
+    this.app.use(helmet());
+    this.app.use(express.json());
+    this.app.use(
+      morgan("dev", {
+        skip: () => process.env.NODE_ENV === "test",
+      })
+    );
+    this.app.disable("x-powered-by");
+    this.app.use("/v1", routes);
+    this.app.use(genericErrorHandler);
+    this.app.use(notFoundError);
+  }
 
-const url = `mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_HOSTNAME}:${MONGO_PORT}/${MONGO_DB}?authSource=admin`;
+  setupDbAndServer = async () => {
+    try {
+      const url = `mongodb://${this.config.db.username}:${this.config.db.password}@${this.config.db.host}:${this.config.db.port}/${this.config.db.database}?authSource=admin`;
+      const conn = await mongoose.connect(url, {
+        useNewUrlParser: true,
+        useCreateIndex: true,
+        useUnifiedTopology: true,
+      });
+      if (process.env.NODE_ENV === "development") {
+        mongoose.set("debug", true);
+      }
+      if (process.env.NODE_ENV !== "test") {
+        this.logger.info(
+          `Connected to database. Connection: ${conn.connection.host} / ${conn.connection.name}`
+        );
+      }
+      await this.startServer();
+    } catch (e) {
+      this.logger.error(`Database error: ${e}`);
+    }
+  };
 
-mongoose
-  .connect(url, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.info("⚡ MongoDB conectado"))
-  .catch((error) => console.log(error));
+  startServer(): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.app
+        .listen(+this.config.port, this.config.host, () => {
+          if (process.env.NODE_ENV !== "test") {
+            this.logger.info(
+              `Server started at http://${this.config.host}:${this.config.port}`
+            );
+          }
 
-const app = express();
-
-app.use(express.json());
-app.use(cors());
-app.use(helmet());
-app.disable("x-powered-by");
-app.use("/contagens/v1", routes);
-app.get("*", function (req, res) {
-  res.status(404).json({ message: "Not found" });
-});
-export default app;
+          resolve(true);
+        })
+        .on("error", nodeErrorHandler);
+    });
+  }
+}
