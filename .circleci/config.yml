@@ -17,7 +17,7 @@ workflows:
             - build
           filters:
             branches:
-              only: master
+              only: main
       - publish-latest:
           requires:
             - docker-build
