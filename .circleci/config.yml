@@ -2,19 +2,19 @@ version: 2.1
 executors:
   docker-publisher:
     environment:
-      IMAGE_NAME: ameciclo/contage
+      IMAGE_NAME: ameciclo/contagem
     docker:
       - image: circleci/buildpack-deps:stretch
 orbs:
   node: circleci/node@4.4.0
 
-workflows:
+workflow:
   build-latest:
     jobs:
       - checkout
       - lint:
-          requires:
-            - checkout
+        requires:
+          - checkout
       - test:
           requires:
             - checkout
