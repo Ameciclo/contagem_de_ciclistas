@@ -12,9 +12,9 @@ workflow:
   build-latest:
     jobs:
       - checkout
-      - lint
-        requires:
-          - checkout
+      - lint:
+          requires:
+            - checkout
       - test:
           requires:
             - checkout
