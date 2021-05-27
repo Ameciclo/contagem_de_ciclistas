@@ -55,7 +55,7 @@ cyclistCountRouter
   });
 
 cyclistCountRouter
-  .route("/metadata")
+  .route("/metadata/")
   .get(async (req: Request, res: Response, next: NextFunction) => {
     const cyclistCountService = new CyclistCountService();
     try {
