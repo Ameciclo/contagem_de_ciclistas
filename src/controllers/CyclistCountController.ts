@@ -12,7 +12,7 @@ cyclistCountRouter
   .route("/")
   .get(async (req: Request, res: Response, next: NextFunction) => {
     const cyclistCountService = new CyclistCountService(),
-      q = req.query;
+      { q } = req.query;
     try {
       let response;
       if (q) {
