@@ -124,4 +124,12 @@ export class CyclistCountService {
     ]);
     return totalSummary;
   }
+
+  async getFiltered(q: any) {
+    return this.model
+      .find({
+        $text: { $search: q as string },
+      })
+      .select("_id summary location name date");
+  }
 }

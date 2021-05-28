@@ -11,11 +11,18 @@ const cyclistCountRouter: Router = Router();
 cyclistCountRouter
   .route("/")
   .get(async (req: Request, res: Response, next: NextFunction) => {
-    const cyclistCountService = new CyclistCountService();
+    const cyclistCountService = new CyclistCountService(),
+      q = req.query;
     try {
+      let response;
+      if (q) {
+        response = await cyclistCountService.getFiltered(q);
+      } else {
+        response = await cyclistCountService.getAll();
+      }
       res.status(200).json({
         success: true,
-        data: await cyclistCountService.getAll(),
+        data: response,
       });
     } catch (err) {
       const error: ApiResponseError = {
