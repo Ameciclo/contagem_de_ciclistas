@@ -26,6 +26,24 @@ cyclistCountRouter
     }
   });
 
+cyclistCountRouter
+  .route("/metadata/")
+  .get(async (req: Request, res: Response, next: NextFunction) => {
+    const cyclistCountService = new CyclistCountService();
+    try {
+      res.status(200).json({
+        success: true,
+        data: await cyclistCountService.getMetadata(),
+      });
+    } catch (err) {
+      const error: ApiResponseError = {
+        code: 400,
+        errorObj: err,
+      };
+      next(error);
+    }
+  });
+
 // /cyclistCount/:id
 cyclistCountRouter
   .route("/:id")
@@ -44,24 +62,6 @@ cyclistCountRouter
       res.status(200).json({
         success: true,
         cyclistCount: cyclistCount,
-      });
-    } catch (err) {
-      const error: ApiResponseError = {
-        code: 400,
-        errorObj: err,
-      };
-      next(error);
-    }
-  });
-
-cyclistCountRouter
-  .route("/metadata/")
-  .get(async (req: Request, res: Response, next: NextFunction) => {
-    const cyclistCountService = new CyclistCountService();
-    try {
-      res.status(200).json({
-        success: true,
-        data: await cyclistCountService.getMetadata(),
       });
     } catch (err) {
       const error: ApiResponseError = {
